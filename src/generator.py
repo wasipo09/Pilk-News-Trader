@@ -3,16 +3,20 @@
 Aggregates analyzed news and generates tradeable signals.
 """
 
-from typing import List, Dict, Literal
+from typing import List, Dict
 from collections import defaultdict
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+from enum import Enum
 
 from .analyzer import NewsAnalysis, Sentiment
 
 
-class Direction(str, Literal["LONG", "SHORT", "NEUTRAL"]):
+class Direction(str, Enum):
     """Trade direction."""
+    LONG = "LONG"
+    SHORT = "SHORT"
+    NEUTRAL = "NEUTRAL"
 
 
 class Signal(BaseModel):
@@ -44,7 +48,7 @@ class SignalGenerator:
 
     def _score_sentiment(self, sentiment: Sentiment) -> int:
         """Convert sentiment to score."""
-        scores = {"bullish": 1, "bearish": -1, "neutral": 0}
+        scores = {Sentiment.BULLISH: 1, Sentiment.BEARISH: -1, Sentiment.NEUTRAL: 0}
         return scores.get(sentiment, 0)
 
     def _score_impact(self, impact: str) -> int:
@@ -107,9 +111,9 @@ class SignalGenerator:
                 total_weight += weight
 
                 # Track sentiment counts
-                if news.sentiment == "bullish":
+                if news.sentiment == Sentiment.BULLISH:
                     bullish_count += 1
-                elif news.sentiment == "bearish":
+                elif news.sentiment == Sentiment.BEARISH:
                     bearish_count += 1
 
                 # Collect key drivers
@@ -172,9 +176,9 @@ class SignalGenerator:
 
 def format_signal(signal: Signal) -> str:
     """Format signal for CLI output."""
-    direction_emoji = {"LONG": "🟢", "SHORT": "🔴", "NEUTRAL": "⚪"}
+    direction_emoji = {Direction.LONG: "🟢", Direction.SHORT: "🔴", Direction.NEUTRAL: "⚪"}
 
-    output = [f"{direction_emoji[signal.direction]} {signal.asset} | {signal.direction} | {signal.confidence}% confidence"]
+    output = [f"{direction_emoji[signal.direction]} {signal.asset} | {signal.direction.value} | {signal.confidence}% confidence"]
     output.append("=" * 60)
 
     if signal.key_drivers:

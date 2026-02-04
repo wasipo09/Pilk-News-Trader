@@ -1,22 +1,29 @@
 """News analysis module - LLM-powered sentiment and impact analysis.
 
 This module provides a framework for analyzing news items.
-The actual analysis is done by the AI model (me) when the analyzer is called.
+The actual analysis is done by AI model (me) when analyzer is called.
 """
 
-from typing import List, Dict, Literal
+from typing import List, Dict
 from pydantic import BaseModel
 from datetime import datetime
+from enum import Enum
 
 from .aggregator import NewsItem
 
 
-class Sentiment(str, Literal["bullish", "bearish", "neutral"]):
+class Sentiment(str, Enum):
     """Sentiment types."""
+    BULLISH = "bullish"
+    BEARISH = "bearish"
+    NEUTRAL = "neutral"
 
 
-class Impact(str, Literal["high", "medium", "low"]):
+class Impact(str, Enum):
     """Impact levels."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 class NewsAnalysis(BaseModel):
@@ -37,7 +44,7 @@ class NewsAnalysis(BaseModel):
 class NewsAnalyzer:
     """Analyzes news items using AI.
 
-    The analysis is done by the main AI model during the CLI execution.
+    The analysis is done by the main AI model during CLI execution.
     This class provides structure and validation.
     """
 
@@ -51,12 +58,12 @@ class NewsAnalyzer:
         """Analyze a batch of news items.
 
         This method is called with news items. The actual analysis
-        should be done by the AI model interpreting the content.
+        should be done by AI model interpreting the content.
 
         Returns a list of analyses (filled in by AI).
         """
         # This is a placeholder - the actual analysis happens
-        # when the CLI is run and the AI processes the news
+        # when CLI is run and the AI processes the news
         return []
 
     def create_analysis(

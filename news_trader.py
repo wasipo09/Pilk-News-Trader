@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from src.aggregator import NewsAggregator, NewsItem
 from src.analyzer import NewsAnalyzer, NewsAnalysis, Sentiment, Impact, extract_crypto_assets
-from src.generator import SignalGenerator, format_signal
+from src.generator import SignalGenerator, format_signal, Direction
 
 
 console = Console()
@@ -65,19 +65,19 @@ def main(
 
         # Simple heuristic sentiment
         if any(word in title_lower for word in ["surge", "rally", "soar", "jump", "gain", "bull", "positive"]):
-            sentiment_val = Sentiment.bullish
+            sentiment_val = Sentiment.BULLISH
         elif any(word in title_lower for word in ["plunge", "crash", "dump", "fall", "bear", "negative", "fear"]):
-            sentiment_val = Sentiment.bearish
+            sentiment_val = Sentiment.BEARISH
         else:
-            sentiment_val = Sentiment.neutral
+            sentiment_val = Sentiment.NEUTRAL
 
         # Simple heuristic impact
         if any(word in title_lower for word in ["break", "record", "major", "significant", "alert", "urgent"]):
-            impact_val = Impact.high
+            impact_val = Impact.HIGH
         elif any(word in title_lower for word in ["update", "report", "data", "news"]):
-            impact_val = Impact.medium
+            impact_val = Impact.MEDIUM
         else:
-            impact_val = Impact.low
+            impact_val = Impact.LOW
 
         # Extract assets
         assets = extract_crypto_assets(item.title + " " + (item.summary or ""))
@@ -97,7 +97,7 @@ def main(
             confidence=confidence,
             actionable=len(assets) > 0,
             key_takeaways=[item.title[:80]] if assets else [],
-            reasoning=f"Based on keywords in title: {sentiment_val} sentiment",
+            reasoning=f"Based on keywords in title: {sentiment_val.value} sentiment",
         )
 
         analyses.append(analysis)
@@ -115,7 +115,7 @@ def main(
     # Filter by sentiment
     if sentiment:
         sentiment = sentiment.lower()
-        signals = [s for s in signals if s.direction.lower() == sentiment]
+        signals = [s for s in signals if s.direction.value.lower() == sentiment]
 
     # Output
     if json_output:
@@ -135,9 +135,9 @@ def main(
             console.print("[yellow]No signals matching criteria.[/yellow]")
 
         # Summary
-        bullish = sum(1 for s in signals if s.direction == "LONG")
-        bearish = sum(1 for s in signals if s.direction == "SHORT")
-        neutral = sum(1 for s in signals if s.direction == "NEUTRAL")
+        bullish = sum(1 for s in signals if s.direction == Direction.LONG)
+        bearish = sum(1 for s in signals if s.direction == Direction.SHORT)
+        neutral = sum(1 for s in signals if s.direction == Direction.NEUTRAL)
 
         console.print("=" * 60)
         console.print(f"Summary: {len(signals)} signals | 🟢 {bullish} bullish | 🔴 {bearish} bearish | ⚪ {neutral} neutral")
@@ -148,7 +148,7 @@ def main(
         console.print("\n[bold]Individual News Analysis:[/bold]\n")
         for i, analysis in enumerate(analyses[:10], 1):
             console.print(f"{i}. {analysis.title}")
-            console.print(f"   Sentiment: {analysis.sentiment} | Impact: {analysis.impact} | Assets: {', '.join(analysis.assets)}")
+            console.print(f"   Sentiment: {analysis.sentiment.value} | Impact: {analysis.impact.value} | Assets: {', '.join(analysis.assets)}")
             console.print(f"   Reasoning: {analysis.reasoning}")
             console.print()
 

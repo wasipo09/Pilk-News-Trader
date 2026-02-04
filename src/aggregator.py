@@ -89,7 +89,12 @@ class NewsAggregator:
             data, cached_at = row
             # Cache is valid for 2 hours
             if datetime.now() - datetime.fromisoformat(cached_at) < timedelta(hours=2):
-                return json.loads(data)
+                # Parse JSON with datetime string handling
+                result = json.loads(data)
+                # Convert published_at string back to datetime
+                if "published_at" in result and isinstance(result["published_at"], str):
+                    result["published_at"] = datetime.fromisoformat(result["published_at"])
+                return result
 
         return None
 
@@ -98,12 +103,18 @@ class NewsAggregator:
         conn = sqlite3.connect(self.cache_db)
         url_hash = hashlib.md5(url.encode()).hexdigest()
 
+        # Convert datetime to string for JSON serialization
+        def json_default(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
+
         conn.execute(
             """
             INSERT OR REPLACE INTO news_cache (url_hash, data, cached_at)
             VALUES (?, ?, ?)
             """,
-            (url_hash, json.dumps(data), datetime.now().isoformat()),
+            (url_hash, json.dumps(data, default=json_default), datetime.now().isoformat()),
         )
 
         conn.commit()
